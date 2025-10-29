@@ -1,0 +1,6 @@
+[project]
+name = "mcp-memos"
+version = "0.1.0"
+description = "A MCP server for interacting with Memos."
+readme = "README.md"
+requires-python = ">=3.13"
