@@ -69,8 +69,10 @@ def server(target: str, token: str) -> FastMCP:
             res = requests.get(content)
             res.raise_for_status()
             raw_content = res.content
-            if mime_type is None:
-                mime_type = res.headers["Content-Type"]
+            if mime_type is None and "Content-Type" in res.headers:
+                ctype = res.headers["Content-Type"]
+                i = ctype.find(";")
+                mime_type = ctype[:i] if i != -1 else ctype
 
         else:
             raw_content = base64.b64decode(content)
