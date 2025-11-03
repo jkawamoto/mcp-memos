@@ -34,6 +34,7 @@ repos:
           - "mcp>=1.9"
           - "rich-click>=1.8.8"
           - "pytest>=8.3.5"
+          - "types-requests>=2.32.0.20250306"
   - repo: local
     hooks:
       - id: pytest

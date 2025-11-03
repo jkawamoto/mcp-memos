@@ -5,12 +5,15 @@
 #  This software is released under the MIT License.
 #
 #  http://opensource.org/licenses/mit-license.php
+import base64
+import mimetypes
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, Literal
 
+import requests
 from mcp.server import FastMCP
 from mcp.server.fastmcp import Context
 from pydantic import Field
@@ -52,5 +55,28 @@ def server(target: str, token: str) -> FastMCP:
             v = Visibility.VISIBILITY_UNSPECIFIED
         res = await ctx.request_context.lifespan_context.client.create_memo(content, v)
         return res.name
+
+    @mcp.tool()
+    async def attach_file(
+        ctx: Context[Any, AppContext],
+        memo_name: str = Field(description="the name of the memo."),
+        filename: str = Field(description="the name of the file."),
+        content: str = Field(description="Base64 representation of a file or a URL to a file to attach to the memo"),
+        mime_type: str | None = Field(description="the MIME type of the file.", default=None),
+    ) -> None:
+        """Attach a file to a memo."""
+        if content.startswith("http://") or content.startswith("https://"):
+            res = requests.get(content)
+            res.raise_for_status()
+            raw_content = res.content
+            if mime_type is None:
+                mime_type = res.headers["Content-Type"]
+
+        else:
+            raw_content = base64.b64decode(content)
+            if mime_type is None:
+                mime_type, _ = mimetypes.guess_type(filename)
+
+        await ctx.request_context.lifespan_context.client.attach_file(memo_name, filename, raw_content, mime_type)
 
     return mcp

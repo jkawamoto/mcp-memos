@@ -11,8 +11,10 @@ from typing import Callable, Union, Self, TypeVar
 
 from grpc.aio import UnaryUnaryClientInterceptor, ClientCallDetails, UnaryUnaryCall, insecure_channel, Channel
 
+from .api.v1.attachment_service_pb2 import CreateAttachmentRequest, Attachment
+from .api.v1.attachment_service_pb2_grpc import AttachmentServiceStub
 from .api.v1.common_pb2 import State
-from .api.v1.memo_service_pb2 import Memo, Visibility, CreateMemoRequest
+from .api.v1.memo_service_pb2 import Memo, Visibility, CreateMemoRequest, SetMemoAttachmentsRequest, GetMemoRequest
 from .api.v1.memo_service_pb2_grpc import MemoServiceStub
 
 RequestType = TypeVar("RequestType")
@@ -39,10 +41,12 @@ class AuthInterceptor(UnaryUnaryClientInterceptor):
 class Memos(AbstractAsyncContextManager):
     _channel: Channel
     _memo_service: MemoServiceStub
+    _attachment_service: AttachmentServiceStub
 
     def __init__(self, target: str, token) -> None:
         self._channel = insecure_channel(target, interceptors=[AuthInterceptor(token)])
         self._memo_service = MemoServiceStub(self._channel)
+        self._attachment_service = AttachmentServiceStub(self._channel)
 
     async def __aenter__(self) -> Self:
         await self._channel.channel_ready()
@@ -63,5 +67,25 @@ class Memos(AbstractAsyncContextManager):
                     content=content,
                     visibility=visibility,
                 )
+            )
+        )
+
+    async def attach_file(self, memo_name: str, filename: str, content: bytes, mime_type: str | None = None) -> None:
+        """Attach a file to a memo."""
+        attachment: Attachment = await self._attachment_service.CreateAttachment(
+            CreateAttachmentRequest(
+                attachment=Attachment(
+                    filename=filename,
+                    content=content,
+                    type=mime_type or "application/octet-stream",
+                )
+            )
+        )
+        memo: Memo = await self._memo_service.GetMemo(GetMemoRequest(name=memo_name))
+        memo.attachments.append(attachment)
+        await self._memo_service.SetMemoAttachments(
+            SetMemoAttachmentsRequest(
+                name=memo.name,
+                attachments=memo.attachments,
             )
         )
