@@ -5,11 +5,12 @@
 #  This software is released under the MIT License.
 #
 #  http://opensource.org/licenses/mit-license.php
-
+from collections.abc import Awaitable
 from contextlib import AbstractAsyncContextManager
+from types import TracebackType
 from typing import Callable, Union, Self, TypeVar
 
-from grpc.aio import UnaryUnaryClientInterceptor, ClientCallDetails, UnaryUnaryCall, insecure_channel, Channel
+from grpc.aio import UnaryUnaryClientInterceptor, ClientCallDetails, UnaryUnaryCall, insecure_channel, Channel, Metadata
 
 from .api.v1.attachment_service_pb2 import CreateAttachmentRequest, Attachment
 from .api.v1.attachment_service_pb2_grpc import AttachmentServiceStub
@@ -22,19 +23,24 @@ ResponseType = TypeVar("ResponseType")
 
 
 class AuthInterceptor(UnaryUnaryClientInterceptor):
-    def __init__(self, token):
+    token: str
+
+    def __init__(self, token: str) -> None:
         self.token = token
 
     async def intercept_unary_unary(
         self,
-        continuation: Callable[[ClientCallDetails, RequestType], UnaryUnaryCall],
+        continuation: Callable[[ClientCallDetails, RequestType], Awaitable[UnaryUnaryCall[RequestType, ResponseType]]],
         client_call_details: ClientCallDetails,
         request: RequestType,
     ) -> Union[UnaryUnaryCall, ResponseType]:
-        metadata = list(client_call_details.metadata or [])
-        metadata.append(("authorization", f"Bearer {self.token}"))
+        if client_call_details.metadata is None:
+            metadata = Metadata()
+            client_call_details = client_call_details._replace(metadata=metadata)  # type: ignore
+        else:
+            metadata = client_call_details.metadata
 
-        client_call_details = client_call_details._replace(metadata=metadata)
+        metadata.add("authorization", f"Bearer {self.token}")
         return await continuation(client_call_details, request)
 
 
@@ -43,7 +49,7 @@ class Memos(AbstractAsyncContextManager):
     _memo_service: MemoServiceStub
     _attachment_service: AttachmentServiceStub
 
-    def __init__(self, target: str, token) -> None:
+    def __init__(self, target: str, token: str) -> None:
         self._channel = insecure_channel(target, interceptors=[AuthInterceptor(token)])
         self._memo_service = MemoServiceStub(self._channel)
         self._attachment_service = AttachmentServiceStub(self._channel)
@@ -52,7 +58,9 @@ class Memos(AbstractAsyncContextManager):
         await self._channel.channel_ready()
         return self
 
-    async def __aexit__(self, exc_type, exc_value, traceback, /):
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, exc_value: BaseException | None, traceback: TracebackType | None, /
+    ) -> None:
         await self.close()
 
     async def close(self) -> None:
@@ -60,7 +68,7 @@ class Memos(AbstractAsyncContextManager):
 
     async def create_memo(self, content: str, visibility: Visibility = Visibility.VISIBILITY_UNSPECIFIED) -> Memo:
         """Create a memo."""
-        return await self._memo_service.CreateMemo(
+        memo: Memo = await self._memo_service.CreateMemo(
             CreateMemoRequest(
                 memo=Memo(
                     state=State.STATE_UNSPECIFIED,
@@ -69,6 +77,7 @@ class Memos(AbstractAsyncContextManager):
                 )
             )
         )
+        return memo
 
     async def attach_file(self, memo_name: str, filename: str, content: bytes, mime_type: str | None = None) -> None:
         """Attach a file to a memo."""

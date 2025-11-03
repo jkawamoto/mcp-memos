@@ -72,7 +72,7 @@ async def test_create_memo(
     res = await mcp_client_session.call_tool("create_memo", arguments={"content": content, "visibility": visibility})
     assert not res.isError
 
-    memo = memos_server.memos[res.structuredContent.get("result")]
+    memo = memos_server.memos[res.structuredContent.get("result")]  # type: ignore
     assert memo.content == content
     assert memo.visibility == expected
 
@@ -83,7 +83,7 @@ async def test_attach_file(
     mcp_client_session: ClientSession,
 ) -> None:
     create_meme_res = await mcp_client_session.call_tool("create_memo", arguments={"content": "abc"})
-    memo_name = create_meme_res.structuredContent.get("result")
+    memo_name = create_meme_res.structuredContent.get("result")  # type: ignore
 
     attachments = [
         ("abc.txt", "text/plain", "text/plain"),
@@ -102,8 +102,8 @@ async def test_attach_file(
         )
         assert not res.isError
 
-    assert len(memos_server.memos[memo_name].attachments) == 3
-    for a, e in zip(memos_server.memos[memo_name].attachments, attachments):
+    assert len(memos_server.memos[memo_name].attachments) == 3  # type: ignore
+    for a, e in zip(memos_server.memos[memo_name].attachments, attachments):  # type: ignore
         assert a.name in memos_server.attachments
         assert a.filename == e[0]
         assert a.type == e[2]
@@ -116,7 +116,7 @@ async def test_attach_file_from_url(
     mcp_client_session: ClientSession,
 ) -> None:
     create_meme_res = await mcp_client_session.call_tool("create_memo", arguments={"content": "abc"})
-    memo_name = create_meme_res.structuredContent.get("result")
+    memo_name = create_meme_res.structuredContent.get("result")  # type: ignore
 
     attachments = [
         ("abc.txt", "text/plain", "text/plain; charset=utf-8", "text/plain"),
@@ -135,8 +135,8 @@ async def test_attach_file_from_url(
         )
         assert not res.isError
 
-    assert len(memos_server.memos[memo_name].attachments) == 3
-    for a, e in zip(memos_server.memos[memo_name].attachments, attachments):
+    assert len(memos_server.memos[memo_name].attachments) == 3  # type: ignore
+    for a, e in zip(memos_server.memos[memo_name].attachments, attachments):  # type: ignore
         assert a.name in memos_server.attachments
         assert a.filename == e[0]
         assert a.type == e[3]

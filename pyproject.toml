@@ -28,9 +28,11 @@ scripts.mcp-memos = "mcp_memos.cli:main"
 dev = [
     "googleapis-common-protos>=1.71",
     "grpcio-tools>=1.76",
+    "mypy>=1.18.2",
     "pre-commit>=4.1",
     "pre-commit-uv>=4.1.4",
     "pytest>=8.3.5",
+    "types-grpcio>=1.0.0.20251009",
     "types-requests>=2.32.4.20250913",
 ]
 
@@ -46,3 +48,15 @@ indent = 4
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "mcp_memos.api.v1.*",
+]
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = [
+    "google.*",
+]
+ignore_missing_imports = true
