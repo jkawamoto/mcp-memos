@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.jkawamoto/mcp-memos",
+  "description": "An MCP server for interacting with Memos.",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/jkawamoto/mcp-memos",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/jkawamoto/mcp-memos/releases/download/v0.1.0/mcp-memos.mcpb",
+      "fileSha256": "",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "Memos API endpoint",
+          "isRequired": true,
+          "format": "string",
+          "name": "MEMOS_API_ENDPOINT",
+          "default": "localhost:5230"
+        },
+        {
+          "description": "Memos API token",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true,
+          "name": "MEMOS_API_TOKEN"
+        }
+      ]
+    }
+  ]
+}
