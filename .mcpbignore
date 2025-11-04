@@ -1,0 +1,4 @@
+.*
+memos/
+tests/
+__pycache__/

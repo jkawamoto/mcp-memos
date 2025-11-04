@@ -1,0 +1,69 @@
+{
+  "manifest_version": "0.2",
+  "name": "mcp-memos",
+  "display_name": "Memos MCP Server",
+  "version": "0.1.0",
+  "description": "An MCP server for interacting with Memos.",
+  "author": {
+    "name": "Junpei Kawamoto",
+    "email": "kawamoto.junpei.s64@kyoto-u.jp",
+    "url": "https://github.com/jkawamoto"
+  },
+  "homepage": "https://github.com/jkawamoto/mcp-memos",
+  "documentation": "https://github.com/jkawamoto/mcp-memos",
+  "support": "https://github.com/jkawamoto/mcp-memos/issues",
+  "server": {
+    "type": "python",
+    "entry_point": "src/mcp_memos/__main__.py",
+    "mcp_config": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "${__dirname}",
+        "mcp-memos"
+      ],
+      "env": {
+        "MEMOS_API_ENDPOINT": "${user_config.memos_api_endpoint}",
+        "MEMOS_API_TOKEN": "${user_config.memos_api_token}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "create_memo",
+      "description": "Create a memo and return the name of the memo."
+    },
+    {
+      "name": "attach_file",
+      "description": "Attach a file to a memo."
+    }
+  ],
+  "compatibility": {
+    "runtimes": {
+      "python": ">=3.10"
+    }
+  },
+  "user_config": {
+    "memos_api_endpoint": {
+      "type": "string",
+      "title": "Memos API endpoint",
+      "description": "Memos API endpoint. Example: localhost:5230",
+      "default": "localhost:5230"
+    },
+    "memos_api_token": {
+      "type": "string",
+      "title": "Memos API token",
+      "description": "Memos API token",
+      "required": true,
+      "sensitive": true
+    }
+  },
+  "keywords": [
+    "memos"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jkawamoto/mcp-memos"
+  }
+}
