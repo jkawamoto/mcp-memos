@@ -1,0 +1,44 @@
+[tools]
+uv = "latest"
+
+[env]
+_.python.venv = ".venv"
+_.file = { path = ".env", redact = true }
+
+[tasks.test]
+description = "Run pytest with verbosity"
+run = "pytest -s -v"
+
+[tasks.update]
+description = "Update dependencies"
+run = [
+    "uv sync -U",
+    "pre-commit autoupdate"
+]
+depends_post = "pre-commit"
+
+[tasks.pre-commit]
+description = "Run pre-commit hooks on all files"
+alias = "p"
+run = "pre-commit run -a"
+
+[tasks.generate-client]
+description = "Generate Python gRPC client code from proto files"
+run = [
+    "python-grpc-tools-protoc -I.venv/lib/python3.13/site-packages -Imemos/proto --python_out=./src/mcp_memos --pyi_out=./src/mcp_memos --grpc_python_out=./src/mcp_memos memos/proto/api/v1/*.proto",
+    "touch src/mcp_memos/api/__init__.py",
+    "touch src/mcp_memos/api/v1/__init__.py",
+    "find src/mcp_memos/api/v1 \\( -name '*.py' -o -name '*.pyi' \\) -exec sed -i '' 's/from api/from mcp_memos.api/g' {} \\;",
+    "find src/mcp_memos/api/v1 \\( -name '*.py' -o -name '*.pyi' \\) -exec sed -i '' 's/import api/import mcp_memos.api/g' {} \\;"
+]
+
+[tasks.serve]
+description = "Start MCP server on localhost with proxy"
+run = "uv tool run mcp-proxy --host 127.0.0.1 --port 38083 --pass-environment -- uv run mcp-memos"
+
+[tasks.package]
+description = "Create package and compute its checksum"
+run = [
+    "npx @anthropic-ai/mcpb pack",
+    "openssl dgst -sha256 mcp-memos.mcpb"
+]
