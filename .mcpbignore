@@ -2,3 +2,4 @@
 memos/
 tests/
 __pycache__/
+server.json
