@@ -61,7 +61,7 @@ def server(target: str, token: str) -> FastMCP:
         ctx: Context[Any, AppContext],
         memo_name: str = Field(description="the name of the memo."),
         filename: str = Field(description="the name of the file."),
-        content: str = Field(description="Base64 representation of a file or a URL to a file to attach to the memo"),
+        content: str = Field(description="Base64 representation of a file or a URL to a file to attach to the memo."),
         mime_type: str | None = Field(description="the MIME type of the file.", default=None),
     ) -> None:
         """Attach a file to a memo."""

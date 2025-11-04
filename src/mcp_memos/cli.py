@@ -13,7 +13,9 @@ from . import server
 
 
 @click.command()
-@click.option("--endpoint", required=True, help="Address to Memos server", default="localhost:5230")
+@click.option(
+    "--endpoint", envvar="MEMOS_API_ENDPOINT", required=True, help="Address to Memos server", default="localhost:5230"
+)
 @click.option("--token", envvar="MEMOS_API_TOKEN", required=True, help="Memos API token")
 @click.version_option()
 def main(endpoint: str, token: str) -> None:
